@@ -1,304 +1,391 @@
 # ContractIQ – AI-Powered Contract Risk Analyzer
 
-> **Privacy-First, Stateless Legal Risk Triage Platform**  
-> Built with **Java 17**, **Spring Boot 3**, **Apache PDFBox**, **iText7**, **React.js**, and **Google Gemini AI**.
+An AI-powered contract analysis application that extracts clauses from PDF documents, evaluates potential contractual risks using Google Gemini, and generates downloadable PDF reports.
 
-[![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
-[![Spring Boot 3.2](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![React 18](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.0.8-purple.svg)](https://vitejs.dev/)
-[![Privacy-First](https://img.shields.io/badge/Privacy-Stateless%20In--Memory-emerald.svg)](#4-privacy-architecture--honest-technical-disclosures)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](#)
+## Overview
 
----
+ContractIQ helps users review contracts by identifying potentially risky clauses and providing AI-generated explanations and suggested revisions.
 
-## 1. Project Overview
+The application uses a React.js frontend and a Java Spring Boot backend. Uploaded PDF documents are processed by the backend, their text is extracted using Apache PDFBox, and the extracted clauses are sent to the Google Gemini API for analysis.
 
-**ContractIQ** is a modern, privacy-first SaaS application designed for commercial contract risk triage. Commercial agreements (MSAs, NDAs, SLAs, Vendor Agreements) often contain unilateral liability caps, ambiguous indemnification clauses, and lopsided termination rights that expose organizations and individuals to legal liabilities.
+The application does not use a database or provide user registration and login functionality. Analysis results are returned to the frontend and can be downloaded as PDF reports.
 
-Unlike conventional legal-tech platforms that store customer agreements in persistent cloud databases, ContractIQ implements an **ephemeral, stateless in-memory architecture**:
-- Contract PDFs are parsed purely in volatile server memory using Apache PDFBox.
-- Provisions are segmented into distinct clauses and analyzed via Google Gemini AI (`gemini-3.5-flash-lite`).
-- Results are streamed directly back to the client and downloadable as an audit-ready PDF report generated on the fly via iText7.
-- **Zero documents, clauses, user accounts, or reports are ever written to a persistent database or permanent server storage.**
+## Features
 
----
+- **PDF Contract Upload:** Upload PDF contracts using a drag-and-drop interface.
+- **PDF Text Extraction:** Extract readable text from PDF documents using Apache PDFBox.
+- **AI-Powered Analysis:** Integrate Google Gemini API to evaluate contract clauses.
+- **Risk Classification:** Classify identified clauses into High, Medium, and Low risk categories.
+- **Risk Scoring:** Generate an overall contract risk score based on analyzed clauses.
+- **Contract Summary:** Generate AI-powered summaries of uploaded contracts.
+- **Clause-Level Insights:** Display risk explanations, missing protections, and suggested revisions.
+- **Interactive Dashboard:** View risk statistics and filter clauses by risk level.
+- **PDF Report Generation:** Generate and download contract analysis reports.
+- **Privacy-Conscious Processing:** Avoid persistent database storage of uploaded contracts and analysis results.
+- **Consent Validation:** Require acknowledgement of external AI processing before contract analysis.
 
-## 2. Core Features
+## Technology Stack
 
-- **Stateless PDF Ingestion:** Upload commercial contracts up to 20 MB with immediate MIME and `%PDF-` signature verification.
-- **In-Memory Clause Segmentation:** Identifies and extracts discrete contractual provisions (Indemnification, Limitation of Liability, Termination, Confidentiality, Warranties, Intellectual Property).
-- **Gemini AI Risk Scoring:** Evaluates legal exposure and severity (0–100 score) with calibrated ratings:
-  - 🔴 **HIGH RISK:** Uncapped indemnities, unilateral IP transfers, or unlimited liability.
-  - 🟡 **MEDIUM RISK:** Ambiguous notice periods, broad confidentiality exclusions, or one-sided remedies.
-  - 🟢 **LOW RISK:** Standard bilateral covenants and balanced commercial terms.
-- **Actionable Counter-Proposals:** Generates balanced negotiation language and missing safeguard checklists with one-click clipboard copying.
-- **Interactive Risk Scorecard:** Visual risk distribution donut powered by Recharts, executive contract summary, and searchable clause explorer with instant severity filters (`ALL`, `HIGH`, `MEDIUM`, `LOW`).
-- **Stateless PDF Export:** Compiles an executive risk audit report into a downloadable PDF directly in volatile memory via iText7.
-- **Zero-Persistence Privacy Guarantee:** No user accounts, no login required, no tracking cookies, and no persistent database tables.
+### Backend
+- Java 17
+- Spring Boot 3.2.0
+- Spring MVC
+- Spring WebFlux WebClient
+- Spring Validation
+- Apache PDFBox 3.0.1
+- iText 7.2.5
+- Jackson
+- Lombok
+- Maven
 
----
+### Frontend
+- React.js 18
+- JavaScript
+- HTML5
+- CSS3
+- Tailwind CSS
+- Vite
+- Axios
+- React Router
+- React Dropzone
+- Recharts
 
-## 3. System Architecture & Workflow
+### AI Integration
+- Google Gemini API
 
-ContractIQ strictly adheres to a clean layered architecture (`Controller` → `Service` → `DTO` → `Exception Handler`) with zero persistent database dependencies.
+## Application Architecture
+
+The application follows a layered backend architecture with separate responsibilities for controllers, services, DTOs, configuration, and exception handling.
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Browser (React.js)"]
-        UI["Upload Interface\n(Drag & Drop PDF)"]
-        Consent["Mandatory AI\nConsent Notice"]
-        Dashboard["Interactive Audit Dashboard\n(Risk Distribution, Filter, Copy)"]
-    end
-
-    subgraph SpringBoot ["Spring Boot Backend (Port 8085)"]
-        Controller["ContractController / ReportController\n(REST API)"]
-        PDFService["PdfExtractionService\n(Apache PDFBox 3.0 - In-Memory RAM)"]
-        AIService["AiAnalysisService\n(WebClient HTTP Integration)"]
-        ReportService["ReportService\n(iText7 In-Memory PDF Generator)"]
-    end
-
-    subgraph External ["External AI Provider"]
-        Gemini["Google Gemini API\n(gemini-3.5-flash-lite)"]
-    end
-
-    UI -->|1. Multipart PDF Upload + Consent| Controller
-    Consent -.->|Consent Confirmed| UI
-    Controller -->|2. In-Memory Byte Stream| PDFService
-    PDFService -->|3. Segmented Clauses| AIService
-    AIService -->|4. TLS 1.3 Encrypted HTTPS Request| Gemini
-    Gemini -->|5. Structured JSON Evaluation| AIService
-    AIService -->|6. Aggregated Risk Metrics & DTOs| Controller
-    Controller -->|7. JSON RiskReportDto| Dashboard
-    Dashboard -->|8. POST In-Memory Report JSON| ReportService
-    ReportService -->|9. Generated PDF Bytes| Dashboard
+    A[React.js Frontend] --> B[Spring Boot REST API]
+    B --> C[PDF Validation]
+    C --> D[Apache PDFBox]
+    D --> E[Text Extraction and Clause Segmentation]
+    E --> F[Gemini AI Integration]
+    F --> G[AI Risk Analysis]
+    G --> H[Contract Risk Report DTO]
+    H --> I[React Analysis Dashboard]
+    I --> J[PDF Export Request]
+    J --> K[iText PDF Generation]
+    K --> L[Downloadable PDF Report]
 ```
 
-### Complete Processing Flow
+## How It Works
 
-1. **Upload & Validation:** User selects a PDF document (validated for `%PDF-` magic bytes and max 20 MB size) and confirms mandatory AI disclosure consent.
-2. **In-Memory Text Extraction:** `PdfExtractionService` loads the byte stream directly into Apache PDFBox (`PDDocument`) within a `try-with-resources` block. Text is stripped and segmented into clause blocks without disk writes.
-3. **AI Risk Assessment:** `AiAnalysisService` calls Google Gemini AI (`gemini-3.5-flash-lite`) with a calibrated legal prompt to classify risk levels (`HIGH`, `MEDIUM`, `LOW`), assign severity scores (0–100), identify missing protections, and draft balanced revision language.
-4. **Scoring & Triage:** `ContractService` computes aggregate risk distribution and produces a stateless `RiskReportDto`.
-5. **Interactive Dashboard:** React renders the executive summary, Recharts risk breakdown donut, and searchable, expandable clause cards.
-6. **On-Demand PDF Export:** User clicks "Download PDF Report", which posts the current in-memory report JSON to `ReportService`. iText7 builds a clean PDF in a `ByteArrayOutputStream` and streams it back as a file download.
-7. **Immediate Resource Purge:** Temporary RAM buffers are reclaimed by garbage collection. No records remain on the server.
+1. **Upload Contract:** The user selects a PDF contract and acknowledges the external AI processing disclosure.
+2. **Validate Document:** The Spring Boot backend validates the uploaded file, its PDF signature, and its size.
+3. **Extract Text:** Apache PDFBox extracts readable text from the uploaded PDF.
+4. **Identify Clauses:** The extracted text is segmented into individual clause sections.
+5. **AI Analysis:** Contract clauses and the document filename are included in a prompt sent to the Google Gemini API over HTTPS.
+6. **Risk Assessment:** Gemini returns structured analysis containing risk classifications, explanations, missing protections, and suggested revisions.
+7. **Display Results:** The React frontend displays the contract summary, overall risk score, and clause-level analysis.
+8. **Export Report:** The user can generate and download a PDF report using the backend PDF generation service.
 
----
+## Privacy and Data Handling
 
-## 4. Privacy Architecture & Honest Technical Disclosures
+ContractIQ is designed to avoid persistent application-level storage of uploaded contracts and analysis results.
 
-| Area | Implementation & Accurate Behavior |
+The current implementation has the following behavior:
+
+| Area | Implementation |
 |---|---|
-| **Zero Database Persistence** | ContractIQ has no database (no PostgreSQL, MySQL, H2, Redis). Zero tables, entities, or repositories exist. |
-| **No Permanent Disk Storage** | The application never writes contracts or reports to permanent server directories or object storage. |
-| **Multipart Upload Lifecycle** | Spring Boot / Tomcat buffers file parts below `file-size-threshold` (2MB) directly in memory. Uploads exceeding 2MB are temporarily spooled to the system temporary directory (`java.io.tmpdir`) and automatically deleted by Tomcat's `ApplicationPart.delete()` upon request completion. |
-| **In-Memory Parsing & Disposal** | `PdfExtractionService` wraps `PDDocument` and byte streams in `try-with-resources`. Buffers are nulled after processing, and native resources are deterministically closed. |
-| **No User Accounts / PII** | No authentication, no registration, no user profiles, no session tokens. All users access features anonymously. |
-| **No Client-side Cache** | Zero usage of `localStorage` or `sessionStorage` for contracts or analysis data. All state lives only in React component memory. |
-| **No Sensitive Logging** | Backend logs capture only operation metadata (e.g. character count, clause count, latency). Contract text and Gemini API keys are strictly excluded or masked (`[REDACTED]`). |
-| **External AI Transmission** | Contract clauses are transmitted via HTTPS to Google's Gemini API (`gemini-3.5-flash-lite`). AI processing and retention are subject to Google Cloud's API terms and privacy policies. Users should not upload confidential documents without authorization. |
-| **Server-Enforced Consent** | Backend strictly rejects requests (`400 Bad Request`) if `consent=true` is not confirmed by the caller. |
+| Database | No database integration |
+| User accounts | No registration or login |
+| Contract storage | No application-managed permanent contract storage |
+| PDF processing | Apache PDFBox processes extracted document content in memory |
+| Multipart uploads | Spring Boot uses a 2 MB memory buffering threshold |
+| Temporary files | Larger multipart uploads may be temporarily stored in the servlet container's temporary directory |
+| Analysis results | Returned to the frontend without database persistence |
+| Frontend state | Analysis data is maintained in React component state |
+| Report generation | PDF generated using an in-memory byte stream |
+| External AI | Contract clauses and filename are transmitted to Google Gemini API |
 
----
+### Important Privacy Considerations
 
-## 5. Technology Stack
+- The application does not intentionally maintain a permanent contract history.
+- Uploaded files larger than the configured multipart threshold may temporarily be written to server temporary storage.
+- Temporary multipart resources are managed by the servlet container. Their cleanup should be verified in the deployment environment.
+- Contract contents and analysis results are not intentionally written to an application database.
+- The frontend does not use localStorage or sessionStorage for contract analysis data.
+- The backend currently logs uploaded filenames during analysis and report export. Filenames may contain sensitive information, so these logging statements should be removed or further restricted before handling confidential documents.
+- Contract clauses and the filename are transmitted to Google's Gemini API for analysis.
+- External processing and retention are governed by Google's applicable API terms and policies.
 
-### Backend
-- **Language:** Java 17
-- **Framework:** Spring Boot 3.2.0 (Spring Web, Spring Validation)
-- **HTTP Client:** Spring WebFlux (`WebClient`) for non-blocking Gemini AI communication
-- **PDF Extraction:** Apache PDFBox 3.0.1 (In-Memory text stripper)
-- **PDF Report Generation:** iText7 Core 7.2.5 (In-Memory byte streaming)
-- **JSON Serialization:** Jackson Databind 2.15+
-- **Code Optimization:** Project Lombok
+**Important:** This application does not guarantee that data is never written to disk or that external AI providers do not retain submitted information. Users should avoid uploading confidential documents unless they understand and accept the external processing involved.
 
-### Frontend
-- **Framework:** React 18 (Functional components, Hooks)
-- **Build Tool:** Vite 5 (Fast HMR & Rollup code-splitting)
-- **Styling:** Tailwind CSS 3 (Clean, minimal B2B legal-tech aesthetic)
-- **Visualizations:** Recharts 2 (Custom SVG donut & risk distribution chart)
-- **File Upload:** React Dropzone 14 (Drag & drop with size/MIME validation)
-- **Typography:** IBM Plex Sans & IBM Plex Mono (Google Fonts)
+## API Endpoints
 
----
-
-## 6. API Documentation
+The backend exposes the following REST endpoints.
 
 ### 1. Health Check
-- **Endpoint:** `GET /api/contracts/health`
-- **Description:** Verifies service health, active AI provider, and stateless operating mode.
-- **Response:** `200 OK`
+
+**GET** `/api/contracts/health`
+
+Checks whether the backend application is responding.
+
+Example response:
+
 ```json
 {
   "status": "UP",
   "service": "ContractIQ API",
-  "persistence": "None (Stateless In-Memory Processing)",
+  "persistence": "None (Stateless In-Memory / Ephemeral Processing)",
   "aiProvider": "Google Gemini"
 }
 ```
 
-### 2. Analyze Contract (Stateless)
-- **Endpoint:** `POST /api/contracts/analyze` (alias: `/api/contracts/upload`)
-- **Content-Type:** `multipart/form-data`
-- **Parameters:**
-  - `file`: MultipartFile (PDF document, max 20 MB, starting with `%PDF-` signature)
-  - `consent`: boolean (Query param or form field, must be `true`)
-- **Response:** `200 OK`
-```json
-{
-  "contractId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "originalFilename": "Master_Services_Agreement.pdf",
-  "fileSizeBytes": 142050,
-  "overallScore": 78,
-  "riskCategory": "HIGH_RISK",
-  "contractSummary": "Master Services Agreement governing cloud software licensing with unilateral indemnification and unlimited vendor liability.",
-  "totalClauses": 14,
-  "highRiskCount": 3,
-  "mediumRiskCount": 5,
-  "lowRiskCount": 6,
-  "analyzedAt": "2026-11-22T14:04:38",
-  "clauses": [
-    {
-      "id": "e4b2c1a0-9831-412e-9d2a-1188204910ab",
-      "clauseIndex": 0,
-      "clauseType": "Indemnification",
-      "riskLevel": "HIGH",
-      "riskScore": 88,
-      "clauseText": "Vendor agrees to defend, indemnify, and hold harmless Customer from any claims without limitation.",
-      "explanation": "Unilateral uncapped indemnity exposes vendor to disproportionate financial damages without reciprocal protection.",
-      "missingProtections": "Mutual indemnity, liability cap carve-in, notice of claim requirements.",
-      "suggestedRevision": "Each party shall indemnify the other against third-party claims arising from gross negligence, subject to the aggregate liability limit in Section 12."
-    }
-  ]
-}
+### 2. Analyze Contract
+
+**POST** `/api/contracts/analyze`
+
+Alternative endpoint: `/api/contracts/upload`
+
+Content-Type: `multipart/form-data`
+
+Parameters:
+
+| Parameter | Type | Description |
+|---|---|---|
+| file | PDF file | Contract document (maximum 20 MB) |
+| consent | Boolean | Must be true to acknowledge external AI processing |
+
+Example using cURL:
+
+```bash
+curl -X POST http://localhost:8085/api/contracts/analyze \
+  -F "file=@sample-contract.pdf" \
+  -F "consent=true"
 ```
 
+The endpoint returns a JSON report containing:
+
+- Contract ID
+- Original filename
+- File size
+- Overall risk score
+- Risk category
+- Contract summary
+- Total clauses analyzed
+- High, Medium, and Low risk counts
+- Clause-level explanations
+- Missing protections
+- Suggested revisions
+
 ### 3. Export PDF Report
-- **Endpoint:** `POST /api/reports/export`
-- **Content-Type:** `application/json`
-- **Accept:** `application/pdf`
-- **Request Body:** `RiskReportDto` JSON payload.
-- **Response:** `200 OK` (`Content-Type: application/pdf`, `Content-Disposition: attachment; filename="<originalFilename>-Risk-Report.pdf"`)
 
----
+**POST** `/api/reports/export`
 
-## 7. Installation & Setup Guide
+Content-Type: `application/json`
+
+Accept: `application/pdf`
+
+Accepts the generated risk report JSON and returns a downloadable PDF document.
+
+The report is generated using iText and returned as PDF bytes.
+
+## Project Structure
+
+```text
+ContractIQ/
+│
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/contractrisk/
+│   │   │   │   ├── config/
+│   │   │   │   ├── controller/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── exception/
+│   │   │   │   ├── service/
+│   │   │   │   └── ContractRiskApplication.java
+│   │   │   │
+│   │   │   └── resources/
+│   │   │       └── application.properties
+│   │   │
+│   │   └── test/
+│   │
+│   └── pom.xml
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   │
+│   ├── package.json
+│   └── vite.config.js
+│
+├── .gitignore
+└── README.md
+```
+
+## Installation and Setup
 
 ### Prerequisites
-- **Java Development Kit (JDK):** Version 17 or higher
-- **Apache Maven:** Version 3.8+
-- **Node.js:** Version 18+ and `npm`
-- **Google Gemini API Key:** Key from [Google AI Studio](https://aistudio.google.com/)
 
----
+Install the following:
 
-### Step 1: Environment Variables
+- Java Development Kit (JDK) 17
+- Apache Maven
+- Node.js
+- npm
+- Google Gemini API key
 
-Set your Gemini API credentials in your environment or terminal:
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/ShreyasBK04/ContractIQ-AI_Powered_Contract-_Risk-_Analyzer.git
+
+cd ContractIQ-AI_Powered_Contract-_Risk-_Analyzer
+```
+
+### 2. Configure Gemini API Key
+
+Get an API key from Google AI Studio:
+
+https://aistudio.google.com/
+
+Set the API key as an environment variable.
 
 **Windows PowerShell:**
+
 ```powershell
-$env:GEMINI_API_KEY="your_gemini_api_key_here"
+$env:GEMINI_API_KEY="your_api_key"
 ```
 
 **Linux / macOS:**
+
 ```bash
-export GEMINI_API_KEY="your_gemini_api_key_here"
+export GEMINI_API_KEY="your_api_key"
 ```
 
-*(Optional variables: `SERVER_PORT=8085`, `FRONTEND_URL=http://localhost:5173`)*
+Never commit your API key to GitHub.
 
----
+### 3. Start the Backend
 
-### Step 2: Backend Setup (Spring Boot)
-
-Navigate to the `backend` directory, build, and run:
+Open a terminal:
 
 ```bash
 cd backend
-mvn clean install
+```
+
+Build the backend:
+
+```bash
+mvn clean package
+```
+
+Run the Spring Boot application:
+
+```bash
 mvn spring-boot:run
 ```
 
-The Spring Boot backend initializes without any database setup on port **8085**:
-```
-Tomcat started on port 8085 (http) with context path ''
-Started ContractRiskApplication in 3.5 seconds
-```
+Backend URL:
 
-Run backend unit & integration tests:
-```bash
-mvn test
+```text
+http://localhost:8085
 ```
 
----
+Health endpoint:
 
-### Step 3: Frontend Setup (React.js + Vite)
+```text
+http://localhost:8085/api/contracts/health
+```
 
-In a separate terminal, navigate to the `frontend` directory:
+### 4. Start the Frontend
+
+Open another terminal:
 
 ```bash
 cd frontend
+```
+
+Install dependencies:
+
+```bash
 npm install
+```
+
+Start the React development server:
+
+```bash
 npm run dev
 ```
 
-The frontend development server starts on:
-```
+Frontend URL:
+
+```text
 http://localhost:5173
 ```
 
-To create an optimized production build:
+### 5. Frontend API Configuration
+
+The frontend uses the following environment variable to configure the backend URL:
+
+```env
+VITE_API_URL=http://localhost:8085
+```
+
+If it is not configured, the frontend defaults to `http://localhost:8085`.
+
+## Testing
+
+### Backend Tests
+
+Run the backend tests:
+
 ```bash
+cd backend
+mvn clean test
+```
+
+### Frontend Production Build
+
+Run:
+
+```bash
+cd frontend
 npm run build
 ```
 
----
+These commands verify the backend test suite and frontend production compilation respectively. Live Gemini API integration and complete end-to-end behavior require separate testing with a configured API key and running application.
 
-## 8. User Interface & Application Screenshots
+## Known Limitations
 
-The ContractIQ user interface is designed following modern B2B SaaS principles, featuring a restrained slate palette, dark typography, and accessible visual hierarchy:
+- Only PDF documents are supported.
+- Scanned PDFs without an extractable text layer are not supported because OCR is not currently implemented.
+- Contract analysis depends on Google Gemini API availability and response quality.
+- AI-generated risk assessments may be inaccurate or incomplete.
+- Contract text extraction and clause segmentation use text-based processing and may not preserve every legal document structure.
+- The application analyzes one contract at a time.
+- No user accounts or saved analysis history are provided.
+- Multipart uploads may use temporary server storage depending on file size.
+- The application does not provide professional legal advice.
 
-| View | Description |
-|---|---|
-| **Landing & In-Memory Upload Workspace** | Above-the-fold layout with drag-and-drop PDF dropzone, file metadata preview, and explicit AI disclosure consent checkbox. |
-| **Executive Risk Scorecard** | Calibrated 0–100 overall contract risk rating, severity categorization (`HIGH_RISK`, `MODERATE_RISK`, `LOW_RISK`), and executive summary. |
-| **Interactive Risk Distribution** | Recharts SVG donut chart visualizing proportional breakdown of high, medium, and low-risk provisions. |
-| **Clause-by-Clause Explorer** | Expandable accordions with original text, risk analysis, omitted protections, and one-click copyable redline counter-language. |
-| **Stateless PDF Audit Report** | Clean, audit-ready PDF summary document generated in-memory via iText7 for legal counsel markup and stakeholder review. |
+## Future Improvements
 
----
+- OCR support for scanned PDF documents.
+- More comprehensive automated testing.
+- Improved clause segmentation.
+- Real-time analysis progress reporting.
+- Additional contract risk assessment rules.
+- More detailed error reporting and API monitoring.
+- Further improvements to temporary file handling and privacy controls.
 
-## 9. Technical Interview Talking Points
+## Legal Disclaimer
 
-When presenting ContractIQ in a **Java Full Stack Developer** interview, highlight these architectural decisions:
+ContractIQ is an educational and informational contract analysis application.
 
-1. **Why Stateless In-Memory Architecture?**  
-   Commercial contracts carry strict Non-Disclosure Agreement (NDA) liabilities. Persisting documents in PostgreSQL or S3 introduces data retention compliance hurdles (GDPR Article 17, SOC 2 compliance). By designing the backend as an ephemeral pipeline using Java `InputStream` and PDFBox memory loading, we guarantee zero data footprint while lowering cloud storage costs to zero.
+The AI-generated summaries, risk classifications, explanations, and suggested revisions are provided for preliminary review purposes only.
 
-2. **Resource Management & JVM Garbage Collection:**  
-   Contract uploads can reach 20 MB. We leverage Java `try-with-resources` to ensure `PDDocument` and byte streams close deterministically, preventing native memory leaks and letting the JVM promptly collect intermediate buffers.
-
-3. **External API Resilience & Rate-Limiting:**  
-   Google Gemini's free tier imposes rate limits (HTTP 429). The `AiAnalysisService` incorporates an exponential backoff retry mechanism (5s, 12s, 25s) with a 90-second non-blocking timeout via Spring WebFlux `WebClient`, ensuring graceful recovery without thread starvation.
-
-4. **iText7 In-Memory PDF Generation:**  
-   Rather than saving PDF reports to a file directory and serving a static download URL, the report generation takes the client's current in-memory report JSON and writes the document straight to a `ByteArrayOutputStream`. The byte array is streamed back with `Content-Type: application/pdf` and cache-control headers.
-
-5. **Clean Separation of Concerns:**  
-   Spring Boot strictly separates HTTP transport (`Controller`), business rules (`ContractService`), external AI orchestration (`AiAnalysisService`), PDF text extraction (`PdfExtractionService`), and document formatting (`ReportService`), making each component independently testable with JUnit 5 and Mockito.
+The application does not provide legal advice and should not replace review by a qualified legal professional.
 
 ---
 
-## 10. Known Limitations & Future Improvements
-
-- **Scanned Image-Only PDFs:** Current extraction relies on digital text layers via PDFBox. Scanned contracts without OCR layers will prompt an informative notice. Adding Tesseract OCR / cloud OCR is planned for a future release.
-- **Multi-Document Comparison:** Currently analyzes one agreement at a time. Future releases will support side-by-side comparison between customer and vendor redline drafts.
-- **Custom Risk Rulebooks:** Allowing legal teams to supply custom policy checklists (e.g., "Always require 30-day notice for termination") to guide Gemini's evaluation.
-
----
-
-## 11. Legal Disclaimer
-
-ContractIQ is an automated contract analysis and risk triage platform intended for informational and initial review purposes only. It does not provide legal advice, establish an attorney-client relationship, or substitute for formal consultation with licensed legal professionals.
+**Developed as a Java Full Stack project using Spring Boot, React.js, and Google Gemini API.**
